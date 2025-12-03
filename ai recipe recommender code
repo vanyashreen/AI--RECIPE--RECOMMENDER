@@ -1,0 +1,1088 @@
+•	INDEX.PHP:
+<?php 
+session_start(); 
+$getStartedLink = isset($_SESSION['user']) ? 'ingredients.php' : 'login.php'; 
+?> 
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+<meta charset="UTF-8"> 
+<title>AI Recipe Recommender</title> 
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"> 
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700&display=swap" rel="stylesheet"> 
+<style> 
+body, html { 
+height: 100%; 
+margin: 0; 
+font-family: 'Roboto', sans-serif; 
+} 
+.hero-section { 
+background-image: url('bg.jpg'); /* You can change this to your favorite 4K food image */ 
+background-size: cover; 
+background-position: center; 
+position: relative; 
+height: 100vh; 
+color: white; 
+} 
+.overlay { 
+position: absolute; 
+top: 0; 
+left: 0; 
+height: 100%; 
+width: 100%; 
+background-color: rgba(0, 0, 0, 0.6); 
+} 
+.content { 
+position: relative; 
+z-index: 2; 
+top: 50%; 
+transform: translateY(-50%); 
+text-align: center; 
+padding: 0 20px; 
+} 
+h1 { 
+font-size: 3.5rem; 
+font-weight: 900; 
+} 
+p.lead { 
+color: #ccc; 
+font-size: 1.2rem; 
+} 
+.btn-primary { 
+background-color: #fff; 
+color: #000; 
+border: none; 
+font-weight: bold; 
+border-radius: 12px; 
+padding: 12px 28px; 
+} 
+.btn-primary:hover { 
+background-color: #f0f0f0; 
+color: #000; 
+} 
+.navbar { 
+background-color: rgba(0, 0, 0, 0.8) !important; 
+} 
+footer { 
+position: absolute; 
+bottom: 15px; 
+width: 100%; 
+text-align: center; 
+color: #aaa; 
+} 
+.content { 
+animation: fadeInUp 1s ease-in-out; 
+} 
+@keyframes fadeInUp { 
+from { 
+opacity: 0; 
+transform: translateY(40px); 
+} 
+to { 
+opacity: 1; 
+transform: translateY(0); 
+} 
+} 
+</style> 
+</head> 
+<body> 
+<!-- Navbar --> 
+<nav class="navbar navbar-expand-lg navbar-dark px-4"> 
+<a class="navbar-brand text-white" href="#">🍳 AI Recipe Recommender</a> 
+<div class="ms-auto"> 
+<?php if (isset($_SESSION['user'])): ?> 
+<span class="text-white me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user']['name']); ?>!</span> 
+<a href="logout.php" class="btn btn-outline-light btn-sm">Logout</a> 
+<?php else: ?> 
+<a href="login.php" class="btn btn-outline-light btn-sm me-2">Login</a> 
+<a href="register.php" class="btn btn-outline-light btn-sm">Register</a> 
+<?php endif; ?> 
+</div> 
+</nav> 
+<!-- Hero Section --> 
+<div class="hero-section"> 
+<div class="overlay"></div> 
+<div class="content text-center"> 
+<h1 class="display-3 fw-bold text-white mb-4" style="font-family: 'Roboto', sans-serif; text-shadow: 2px 2px 10px rgba(0,0,0,0.6);"> 
+FIND RECIPES THAT <span style="color: #ffc107;">WOW</span> YOU 
+</h1> 
+<p class="lead text-light mb-4" style="font-size: 1.25rem; font-weight: 300;"> 
+Just enter what’s in your kitchen, and let <strong>AI</strong> do its magic.<br> 
+<em>Smart, fast, and delicious.</em> 
+</p> 
+<a href="<?php echo $getStartedLink; ?>" class="btn btn-primary btn-lg shadow px-5 py-3 fw-semibold" style="border-radius: 50px;"> 
+✨ Get Started 
+</a> 
+</div> 
+</div> 
+<!-- Footer --> 
+<footer> 
+<small>Built with ❤️ using PHP + Flask + Bootstrap</small> 
+</footer> 
+</body> 
+</html>
+•	REGISTER.PHP:-
+<?php
+session_start();
+include 'connect.php';
+$message = '';
+function isStrongPassword($password) {
+return preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $password);
+}
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+$name = $_POST['name'];
+$email = $_POST['email'];
+$password = $_POST['password'];
+if (!isStrongPassword($password)) {
+$message = "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.";
+} else {
+// Check if user already exists
+$stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$res = $stmt->get_result();
+if ($res->num_rows > 0) {
+$message = "Email already registered.";
+} else {
+$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+$stmt = $conn->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
+$stmt->bind_param("sss", $name, $email, $hashedPassword);
+if ($stmt->execute()) {
+$message = "Registered successfully! You can now login.";
+} else {
+$message = "Error: " . $conn->error;
+}
+}
+}
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register - AI Recipe App</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body {
+background-color: #f8f9fa;
+font-family: 'Roboto', sans-serif;
+}
+.card {
+border-radius: 20px;
+box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+#strengthMessage {
+font-size: 0.9em;
+}
+</style>
+</head>
+
+<body>
+<div class="container d-flex justify-content-center align-items-center vh-100">
+<div class="card p-4" style="min-width: 350px; max-width: 450px; width: 100%;">
+<h3 class="text-center mb-4 fw-bold">Create Account</h3>
+<?php if ($message): ?>
+<div class="alert alert-info text-center"><?php echo $message; ?></div>
+<?php endif; ?>
+<form method="POST">
+<div class="mb-3">
+<label class="form-label">Name</label>
+<input type="text" name="name" required class="form-control">
+</div>
+<div class="mb-3">
+<label class="form-label">Email</label>
+<input type="email" name="email" required class="form-control">
+</div>
+
+<div class="mb-3">
+<label class="form-label">Password</label>
+<input type="password" name="password" id="password" required class="form-control">
+<div id="strengthMessage" class="form-text text-muted mt-1">Must be 8+ chars with uppercase, lowercase, number, and symbol.</div>
+</div>
+<button type="submit" class="btn btn-primary w-100 fw-bold">Register</button>
+</form>
+
+<p class="text-center mt-3 mb-0">
+Already have an account? <a href="login.php">Login here</a>
+</p>
+</div>
+</div>
+
+<script>
+document.getElementById("password").addEventListener("input", function () {
+const val = this.value;
+const msg = document.getElementById("strengthMessage");
+const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+if (val.length < 8) {
+msg.innerText = "Too short. Use 8+ characters.";
+msg.style.color = "red";
+} else if (!pattern.test(val)) {
+msg.innerText = "Weak: Use upper, lower, number & symbol.";
+msg.style.color = "orange";
+} else {
+msg.innerText = "Strong password ✅";
+msg.style.color = "green";
+}
+});
+</script>
+</body>
+</html>
+
+
+
+
+
+
+•	LOGIN.PHP:-
+<?php
+session_start();
+require_once 'connect.php';
+$errors = [];
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+$email = trim($_POST['email']);
+$password = $_POST['password'];
+if (empty($email) || empty($password)) {
+$errors[] = "All fields are required.";
+} else {
+$stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$res = $stmt->get_result();
+
+if ($res->num_rows > 0) {
+$user = $res->fetch_assoc();
+if (password_verify($password, $user['password'])) {
+$_SESSION['user'] = [
+'id' => $user['id'],
+'name' => $user['name'],
+'email' => $user['email'],
+'user_type' => $user['user_type'] // Store user_type
+];
+
+// Redirect based on user_type
+if ($user['user_type'] === 'admin') {
+header("Location: admin/admin-panel.php");
+} else {
+header("Location: index.php");
+}
+exit();
+} else {
+$errors[] = "Invalid password.";
+}
+} else {
+$errors[] = "User not found.";
+}
+}
+}
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login - AI Recipe Recommender</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body {
+background: linear-gradient(135deg, #f8f9fa, #dee2e6);
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+}
+
+.login-box {
+background: white;
+padding: 40px;
+border-radius: 15px;
+box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+max-width: 400px;
+width: 100%;
+}
+.brand-title {
+font-weight: bold;
+font-size: 24px;
+color: #343a40;
+margin-bottom: 20px;
+}
+</style>
+</head>
+
+<body>
+<div class="login-box">
+<div class="text-center brand-title">🍳 AI Recipe Recommender</div>
+<?php if (!empty($errors)): ?>
+<div class="alert alert-danger">
+<?php foreach ($errors as $err) echo "<div>$err</div>"; ?>
+</div>
+<?php endif; ?>
+<form method="POST">
+<div class="mb-3">
+<label for="email" class="form-label">Email address</label>
+<input type="email" name="email" class="form-control" id="email" required>
+</div>
+
+<div class="mb-3">
+<label for="password" class="form-label">Password</label>
+<input type="password" name="password" class="form-control" id="password" required>
+</div>
+<button type="submit" class="btn btn-primary w-100">Login</button>
+<p class="text-center mt-3 mb-0">
+Don't have an account? <a href="register.php">Register here</a>
+</p>
+</form>
+</div>
+</body>
+</html>
+•	LOGOUT.PHP :-
+<?php
+session_start();
+session_destroy();
+header("Location: login.php");
+exit();
+
+•	RECOMMEND.PHP :-
+<?php
+$recipes = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$ingredients = $_POST['ingredients'];
+// ✅ Save to MySQL
+$conn = new mysqli("localhost", "root", "", "ai_recipe");
+if ($conn->connect_error) {
+die("Connection failed: " . $conn->connect_error);
+}
+$stmt = $conn->prepare("INSERT INTO searches (ingredients) VALUES (?)");
+$stmt->bind_param("s", $ingredients);
+$stmt->execute();
+$stmt->close();
+$conn->close();
+
+// ✅ Call Flask API
+$api_url = 'http://127.0.0.1:5000/recommend';
+$data = ['ingredients' => $ingredients];
+$ch = curl_init($api_url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+$response = curl_exec($ch);
+curl_close($ch);
+$recipes = json_decode($response, true);
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Recommended Recipes</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body {
+font-family: 'Poppins', sans-serif;
+}
+.card {
+transition: all 0.3s ease;
+border: none;
+border-radius: 1.5rem;
+overflow: hidden;
+box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.card:hover {
+transform: scale(1.02);
+box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+.card-img-top {
+height: 220px;
+object-fit: cover;
+}
+.badge-ai {
+background: linear-gradient(135deg, #fceabb, #f8b500);
+color: #222;
+font-weight: 600;
+}
+.rating-btns {
+position: absolute;
+top: 10px;
+right: 10px;
+z-index: 10;
+}
+.rating-btns button {
+margin-left: 5px;
+}
+</style>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+<a class="navbar-brand" href="index.php">🍳 AI Recipe Recommender</a>
+</nav>
+<div class="container mt-5">
+<h2 class="mb-4 text-center">Recommended Recipes</h2>
+<?php if (!empty($recipes)) : ?>
+<div class="row">
+<?php foreach ($recipes as $recipe) : ?>
+<div class="col-md-4 mb-4">
+<div class="card h-100 shadow">
+<div class="card-body">
+<h5 class="card-title text-primary fw-bold"><?= $recipe['title'] ?></h5>
+<p class="card-text text-muted mb-2" style="font-size: 0.95rem;">
+<strong class="text-dark">Ingredients:</strong><br>
+<?= nl2br(htmlspecialchars($recipe['ingredients'])) ?>
+</p>
+<p class="card-text" style="font-size: 0.9rem;">
+<strong class="text-dark">Steps:</strong><br>
+<?= nl2br(htmlspecialchars($recipe['steps'] ?? 'N/A')) ?>
+</p>
+<div class="d-flex justify-content-between align-items-center mt-3">
+<div>
+<span class="badge bg-info text-dark"><strong>⏱ Time:</strong> <?= htmlspecialchars($recipe['time'] ?? 'N/A') ?></span>
+<span class="badge bg-warning text-dark"><strong>🔥 Difficulty:</strong> <?= htmlspecialchars($recipe['difficulty'] ?? 'N/A') ?></span>
+</div>
+<span class="badge badge-ai">🍳 AI Recommended</span>
+</div>
+</div>
+<div class="card-footer bg-white border-0 d-flex justify-content-end align-items-center">
+<form method="POST" class="d-inline me-2" id="likeForm<?= $recipe['title'] ?>">
+<input type="hidden" name="recipe_title" value="<?= $recipe['title'] ?>">
+<!-- <button type="button" id="likeButton<?= $recipe['title'] ?>" class="btn btn-sm">
+<img src="like.png" alt="Like" style="width: 24px; height: 24px;">
+</button> -->
+</form>
+<form method="POST" class="d-inline" id="dislikeForm<?= $recipe['title'] ?>">
+<input type="hidden" name="recipe_title" value="<?= $recipe['title'] ?>">
+<!-- <button type="button" id="dislikeButton<?= $recipe['title'] ?>" class="btn btn-sm">
+<img src="dislike.png" alt="Dislike" style="width: 24px; height: 24px;">
+</button> -->
+</form>
+<!-- Link to the separate Feedback page -->
+<a href="feedback.php?recipe_title=<?= urlencode($recipe['title']) ?>" class="btn btn-info btn-sm ms-2">Give Feedback</a>
+</div>
+</div>
+</div>
+<?php endforeach; ?>
+</div>
+<?php else : ?>
+<div class="alert alert-danger text-center">
+Oops! No recipes found or something went wrong with the AI API.
+</div>
+<?php endif; ?>
+</div>
+<footer class="text-center text-muted mt-5 mb-3">
+<small>AI Recommendations powered by Python Flask & PHP 💡</small>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+•	INGREDIENTS.PHP :-
+<?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enter Ingredients - AI Recipe Recommender</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f8f8f8; /* Light grey background, common on Apple sites */
+            color: #1d1d1f; /* Standard Apple text color */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .navbar-nav .nav-link {
+            font-size: 1rem;
+            color: #1d1d1f;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #0071e3; /* Apple's blue highlight color */
+        }
+        .hero-heading {
+            font-size: 2.8rem; /* Slightly larger for impact */
+            font-weight: 700; /* Bolder heading */
+            letter-spacing: -0.02em; /* Subtle letter spacing adjustment */
+            margin-bottom: 0.5rem; /* Less bottom margin */
+        }
+
+        .subtle-text {
+            font-size: 1.1rem;
+            color: #636366; /* Apple's secondary text color */
+            line-height: 1.6; /* Improved readability */
+            margin-bottom: 2rem; /* More bottom margin for separation */
+        }
+        .card-style {
+            background: #fff;
+            border-radius: 12px; /* More subtle rounded corners */
+            padding: 40px;
+            max-width: 600px; /* Slightly narrower card */
+            margin: 40px auto; /* More top/bottom margin for visual breathing room */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Softer shadow */
+        }
+        .form-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 0.5rem;
+        }
+        .form-control {
+            border: 1px solid #d2d2d7; /* Light grey border */
+            border-radius: 8px; /* More subtle rounded corners */
+            padding: 12px 16px;
+            font-size: 1rem;
+            color: #1d1d1f;
+            box-shadow: none !important; /* Remove default focus shadow */
+        }
+        .form-control:focus {
+            border-color: #0071e3; /* Apple's blue focus color */
+            outline: none;
+        }
+        .btn-primary {
+            background-color: #0071e3; /* Apple's primary blue */
+            color: #fff;
+            border: none;
+            border-radius: 8px; /* More subtle rounded corners */
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #005cb2; /* Darker blue on hover */
+        }
+        .btn-outline-danger {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-color: #dc3545;
+            color: #dc3545;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 mb-5" style="border-bottom: 1px solid #e5e5e5;">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-semibold fs-4 text-dark" href="#">🍎 AI Recipe Recommender</a>
+        <div class="d-flex align-items-center">
+            <span class="me-3 text-muted" style="font-size: 0.9rem;">Welcome, <strong><?php echo htmlspecialchars($_SESSION['user']['name']); ?></strong></span>
+            <a href="logout.php" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
+    </div>
+</nav>
+<div class="container mt-5">
+    <div class="card-style text-center">
+        <h2 class="hero-heading mb-3">Hey <?php echo htmlspecialchars($_SESSION['user']['name']); ?>,</h2>
+        <p class="subtle-text mb-4">Enter your ingredients below and let our smart AI recommend something delicious!</p>
+        <form action="recommend.php" method="POST">
+            <div class="mb-3 text-start">
+                <label for="ingredients" class="form-label">Ingredients (comma-separated):</label>
+                <input type="text" name="ingredients" id="ingredients" class="form-control" placeholder="e.g. tomato, pasta, cheese" required>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">🍽️ Get Recipes</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
+
+•	THANKYOU.PHP :-
+<?php
+// Start the session to access user information
+
+session_start();
+// Check if the user is logged in
+if (!isset($_SESSION['user']['id'])) {
+
+// Redirect to login page if user is not logged in
+header("Location: login.php");
+exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Thank You - Feedback Submitted</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+<a class="navbar-brand" href="index.php">🍳 AI Recipe Recommender</a>
+</nav>
+
+<div class="container mt-5 text-center">
+<h2>Thank You for Your Feedback!</h2>
+<p>Your feedback has been successfully submitted.</p>
+<!-- Button to redirect back to the recommend page -->
+<a href="ingredients.php" class="btn btn-primary">Go Back to Recommended Recipes</a>
+</div>
+<footer class="text-center text-muted mt-5 mb-3">
+<small>AI Recommendations powered by Python Flask & PHP 💡</small>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+•	RATE.PHP :-
+<?php
+$title = $_POST['recipe_title'];
+$rating = $_POST['rating'];
+$conn = new mysqli("localhost", "root", "", "ai_recipe");
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+$stmt = $conn->prepare("INSERT INTO ratings (recipe_title, rating) VALUES (?, ?)");
+$stmt->bind_param("ss", $title, $rating);
+$stmt->execute();
+$stmt->close();
+$conn->close();
+header("Location: ingredients.php");
+exit;
+?>
+
+
+
+•	FEEDBACK.PHP :-
+<?php
+// Start the session to access user information
+session_start();
+// Check if the user is logged in
+if (!isset($_SESSION['user']['id'])) {
+    // Redirect to login page if user is not logged in
+    header("Location: login.php");
+    exit();
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get the form data
+    $recipe_title = $_POST['recipe_title'];
+    $rating = $_POST['rating'];
+    $comments = $_POST['comments'];
+    $user_id = $_SESSION['user']['id']; // Correctly reference user_id from session
+
+    // Path to the recipes CSV file
+    $csv_file = 'ai-api/recipes.csv';
+    // Check if the file exists
+    if (!file_exists($csv_file)) {
+        die("Error: recipes.csv file not found.");
+    }
+    // Read and parse the CSV file
+    $recipes = array_map('str_getcsv', file($csv_file));
+    // Find the recipe_id based on the recipe title
+    $recipe_id = null;
+    foreach ($recipes as $index => $recipe) {
+        if (strtolower(trim($recipe[0])) === strtolower(trim($recipe_title))) {  // Assuming the title is the first column
+            $recipe_id = $index + 1; // Set recipe_id as the row number (or whatever logic you need)
+            break;
+        }
+    }
+    // If recipe was found, insert feedback
+    if ($recipe_id !== null) {
+        // Connect to the database to insert feedback
+        $conn = new mysqli("localhost", "root", "", "ai_recipe");
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        // Insert the feedback into the feedback table
+        $stmt = $conn->prepare("INSERT INTO feedback (recipe_title, user_id, rating, comments, created_at) VALUES (?, ?, ?, ?, NOW())");
+$stmt->bind_param("siss", $recipe_title, $user_id, $rating, $comments);
+        $stmt->execute();
+        $stmt->close();
+        $conn->close();
+        // Redirect to a thank you page or back to the recipe page
+        header("Location: thank-you.php");
+        exit();
+    } else {
+        echo "Error: Recipe not found.";
+    }
+}
+// Get recipe_title from URL parameters (passed when opening feedback form)
+$recipe_title = $_GET['recipe_title'] ?? 'Unknown Recipe';
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Provide Feedback</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+        <a class="navbar-brand" href="index.php">🍳 AI Recipe Recommender</a>
+    </nav>
+    <div class="container mt-5">
+        <h2 class="text-center">Feedback for <?= htmlspecialchars($recipe_title) ?></h2>
+        <form method="POST" action="feedback.php">
+            <!-- Recipe title (hidden) -->
+            <input type="hidden" name="recipe_title" value="<?= htmlspecialchars($recipe_title) ?>">
+            <!-- Rating -->
+            <div class="mb-3">
+                <label for="rating" class="form-label">Rating</label>
+                <select class="form-select" name="rating" id="rating" required>
+                    <option value="">Select Rating</option>
+                    <option value="1">1 Star</option>
+                    <option value="2">2 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="5">5 Stars</option>
+                </select>
+            </div>
+            <!-- Comments -->
+            <div class="mb-3">
+                <label for="comments" class="form-label">Your Comments</label>
+                <textarea class="form-control" name="comments" id="comments" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Feedback</button>
+        </form>
+    </div>
+    <footer class="text-center text-muted mt-5 mb-3">
+        <small>AI Recommendations powered by Python Flask & PHP 💡</small>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+•	ADMIN PANEL.PHP :-
+<?php
+session_start();
+if (!isset($_SESSION['user']) || $_SESSION['user']['user_type'] !== 'admin') {
+    header("Location: ../login.php");
+    exit();
+}
+require_once '../connect.php';
+// Fetch dashboard stats safely
+function getCount($conn, $query) {
+    $result = $conn->query($query);
+    return $result ? $result->fetch_assoc()['total'] : 0;
+}
+$user_count = getCount($conn, "SELECT COUNT(*) as total FROM users");
+// $recipe_count = getCount($conn, "SELECT COUNT(*) as total FROM recipes");
+$csvFile = '../ai-api/recipes.csv'; // Update the correct path
+$recipe_count = 0;
+if (($handle = fopen($csvFile, "r")) !== FALSE) {
+    // Skip header row
+    fgetcsv($handle);
+    while (fgetcsv($handle) !== FALSE) {
+        $recipe_count++;
+    }
+    fclose($handle);
+}
+$feedback_count = getCount($conn, "SELECT COUNT(*) as total FROM feedback");
+$chef_count = getCount($conn, "SELECT COUNT(*) as total FROM users WHERE user_type = 'chef'");
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Panel - AI Recipe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👨🍳 Welcome, <?= htmlspecialchars($_SESSION['user']['name']) ?> (Admin)</h2>
+        <a href="logout.php" class="btn btn-outline-danger">Logout</a>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="card-text fs-3"><?= $user_count ?></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Total Recipes</h5>
+                    <p class="card-text fs-3"><?= $recipe_count ?></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Feedback Entries</h5>
+                    <p class="card-text fs-3"><?= $feedback_count ?></p>
+                </div>
+            </div>
+        </div>
+        <!-- <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Total Chefs</h5>
+                    <p class="card-text fs-3"><?= $chef_count ?></p>
+                </div>
+            </div>
+        </div> -->
+    </div>
+    <div class="mt-5 d-flex flex-wrap gap-3">
+        <a href="manage-users.php" class="btn btn-outline-primary">Manage Users</a>
+        <a href="manage-recipes.php" class="btn btn-outline-success">Manage Recipes</a>
+        <a href="view-feedback.php" class="btn btn-outline-warning">View Feedback</a>
+    </div>
+</div>
+</body>
+</html>
+
+•	DELETE FEEDBACK.PHP :-
+<?php
+session_start();
+require_once '../connect.php';
+if (!isset($_SESSION['user']) || $_SESSION['user']['user_type'] !== 'admin') {
+    header("Location: ../login.php");
+    exit();
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['feedback_id'])) {
+    $feedback_id = intval($_POST['feedback_id']);
+    $stmt = $conn->prepare("DELETE FROM feedback WHERE feedback_id = ?");
+    $stmt->bind_param("i", $feedback_id);
+    $stmt->execute();
+    $stmt->close();
+}
+header("Location: view-feedback.php");
+exit();?>
+•	MANAGE RECIPE.PHP:-
+<?php
+session_start();
+if (!isset($_SESSION['user']) || $_SESSION['user']['user_type'] !== 'admin') {
+    header("Location: ../login.php");
+    exit();
+}
+$csvFile = '../ai-api/recipes.csv';
+$recipes = [];
+// Load recipes from CSV
+if (($handle = fopen($csvFile, "r")) !== FALSE) {
+    while (($data = fgetcsv($handle)) !== FALSE) {
+        $recipes[] = $data;
+    }
+    fclose($handle);
+}
+// Delete recipe
+if (isset($_GET['delete'])) {
+    $deleteIndex = intval($_GET['delete']);
+    if ($deleteIndex > 0 && $deleteIndex < count($recipes)) {
+        unset($recipes[$deleteIndex]);
+        $fp = fopen($csvFile, 'w');
+        foreach ($recipes as $recipe) {
+            fputcsv($fp, $recipe);
+        }
+        fclose($fp);
+        header("Location: manage-recipes.php");
+        exit();
+    }
+}
+// Add recipe
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['title'])) {
+    $newRecipe = [
+        $_POST['title'],
+        $_POST['category'],
+        $_POST['type'],
+        $_POST['ingredients'],
+        $_POST['steps'],
+        $_POST['created_by'],
+        date('Y-m-d'),
+        '' // Empty image field for now
+    ];
+    $fp = fopen($csvFile, 'a');
+    fputcsv($fp, $newRecipe);
+    fclose($fp);
+    header("Location: manage-recipes.php");
+    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Recipes - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-5">
+<h2>🍲 Manage Recipes (CSV)</h2>
+<!-- Add Recipe Form -->
+<form method="POST" class="border p-4 rounded mb-4 bg-light">
+    <h5>Add New Recipe</h5>
+    <div class="row">
+        <div class="col-md-4 mb-2">
+            <input type="text" name="title" class="form-control" placeholder="Title" required>
+        </div>
+        <div class="col-md-2 mb-2">
+            <input type="text" name="category" class="form-control" placeholder="Category" required>
+        </div>
+
+        <div class="col-md-2 mb-2">
+            <input type="text" name="type" class="form-control" placeholder="Type" required>
+        </div>
+        <div class="col-md-2 mb-2">
+            <input type="text" name="created_by" class="form-control" placeholder="Created By" required>
+        </div>
+        <div class="col-12 mb-2">
+            <textarea name="ingredients" class="form-control" placeholder="Ingredients" required></textarea>
+        </div>
+        <div class="col-12 mb-2">
+            <textarea name="steps" class="form-control" placeholder="Steps" required></textarea>
+        </div>
+        <div class="col-12">
+            <button class="btn btn-success">Add Recipe</button>
+            <a href="admin-panel.php" class="btn btn-secondary">← Back to Dashboard</a>
+        </div>
+       
+    </div>
+</form>
+<!-- Recipes Table -->
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Ingredients</th>
+            <th>Steps</th>
+            <th>Created By</th>
+            <th>Created At</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+    <?php foreach ($recipes as $index => $row): ?>
+        <?php if ($index === 0) continue; // Skip header ?>
+        <tr>
+            <td><?= $index ?></td>
+            <td><?= htmlspecialchars($row[0] ?? 'N/A') ?></td>
+            <td><?= htmlspecialchars($row[1] ?? 'N/A') ?></td>
+            <td><?= htmlspecialchars($row[2] ?? 'N/A') ?></td>
+            <td><?= htmlspecialchars($row[3] ?? 'N/A') ?></td>
+            <td><?= htmlspecialchars($row[4] ?? 'N/A') ?></td>
+            <td><?= htmlspecialchars($row[5] ?? 'N/A' ) ?></td>
+            <td><?= htmlspecialchars($row[6] ?? 'N/A') ?></td>
+            <td>
+                <a href="?delete=<?= $index ?>" onclick="return confirm('Delete this recipe?')" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+
+<a href="admin-panel.php" class="btn btn-secondary">← Back to Dashboard</a>
+</body>
+</html>
+
+
+
+
+
+
+•	MANAGE USER.PHP :-
+<?php
+session_start();
+require_once '../connect.php';
+// Ensure only admin can access
+if (!isset($_SESSION['user']) || $_SESSION['user']['user_type'] !== 'admin') {
+    header("Location: ../login.php");
+    exit();
+}
+// Handle user deletion
+if (isset($_GET['delete'])) {
+    $delete_id = intval($_GET['delete']);
+    // Prevent self-deletion
+    if ($_SESSION['user']['id'] != $delete_id) {
+        $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->bind_param("i", $delete_id);
+        $stmt->execute();
+        header("Location: manage-users.php");
+        exit();
+    }
+}
+$result = $conn->query("SELECT id, name, email, user_type, created_at FROM users ORDER BY created_at DESC");
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Users - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4">👥 Manage Users</h2>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>User Type</th>
+                <th>Joined At</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php while ($user = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?= htmlspecialchars($user['id']) ?></td>
+                    <td><?= htmlspecialchars($user['name']) ?></td>
+                    <td><?= htmlspecialchars($user['email']) ?></td>
+                    <td><?= htmlspecialchars($user['user_type']) ?></td>
+                    <td><?= htmlspecialchars($user['created_at']) ?></td>
+                    <td>
+                        <?php if ($user['id'] != $_SESSION['user']['id']): ?>
+                            <a href="?delete=<?= $user['id'] ?>" onclick="return confirm('Are you sure you want to delete this user?');" class="btn btn-sm btn-danger">Delete</a>
+                        <?php else: ?>
+                            <span class="text-muted">Yourself</span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endwhile; ?>
+        </tbody>
+    </table>
+    <a href="admin-panel.php" class="btn btn-secondary">← Back to Dashboard</a>
+</div>
+</body>
+</html>
+•	VIEW FEEDBACK.PHP :-
+<?php
+session_start();
+require_once '../connect.php';
+
+// ✅ Ensure only admin can access
+if (!isset($_SESSION['user']) || $_SESSION['user']['user_type'] !== 'admin') {
+    header("Location: ../login.php");
+    exit();
+}
+$sql = "SELECT f.feedback_id, f.recipe_title, u.name AS user_name, f.rating, f.comments, f.created_at
+        FROM feedback f
+        JOIN users u ON f.user_id = u.id
+        ORDER BY f.created_at DESC";
+$result = $conn->query($sql);
+?>
